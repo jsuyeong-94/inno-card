@@ -131,6 +131,11 @@
     <canvas id="backCanvas"></canvas>
   </div>
 
+  <label class="checkbox-row" id="confirmRow" style="margin-top:4px;">
+    <input type="checkbox" id="confirmCheck" />
+    위 명함에 표시된 이름 / 부서 / 직급 / 전화번호 / 이메일 정보를 모두 확인했습니다.
+  </label>
+
   <button class="primary" id="submitBtn">신청서 제출하기</button>
   <div class="footnote">
     제출하시면 담당자(syj@innosim.com)에게 앞/뒤 명함 이미지와 신청 내용이 담긴 워드 파일이 첨부된 메일이 자동 발송되고, 신청 기록이 구글시트에 저장돼요.
@@ -171,16 +176,20 @@ const BACK_LAYOUT = {
 
 // 데모용 샘플 직원 명단 — 구글시트 연결 전 기본값
 const SAMPLE_DIRECTORY = [
-  { name: "김수영", dept: "CMO실 / 영업지원팀", deptEn: "Sales Support Team / CMO", rank: "프로", rankEn: "Pro." },
-  { name: "이노심", dept: "CTO실 / 개발팀", deptEn: "Development Team / CTO", rank: "책임", rankEn: "Principal" },
-  { name: "박테스트", dept: "경영지원팀", deptEn: "Corporate Support Team", rank: "사원", rankEn: "Staff" },
+  { name: "김수영", dept: "CMO실 / 영업지원팀", deptEn: "Sales Support Team / CMO", rank: "프로", rankEn: "Pro.", email: "suyoung.kim@innosim.com" },
+  { name: "이노심", dept: "CTO실 / 개발팀", deptEn: "Development Team / CTO", rank: "책임", rankEn: "Principal", email: "innosim.lee@innosim.com" },
+  { name: "박테스트", dept: "경영지원팀", deptEn: "Corporate Support Team", rank: "사원", rankEn: "Staff", email: "test.park@innosim.com" },
 ];
 
 // ⚠️ 구글시트를 "웹에 게시 > CSV" 한 링크를 여기에 붙여넣으면 명단이 자동 연결됩니다.
-// 시트 열 순서: 이름, 부서, 부서(영문), 직급, 직급(영문)
+// 시트 열 순서: 이름, 부서, 부서(영문), 직급, 직급(영문), 이메일(전체 주소)
 const DIRECTORY_CSV_URL = "https://docs.google.com/spreadsheets/d/1dnI_6UYOKcruB70BeeBLXsfwMw-9rdHUCUVJ9PySRXY/export?format=csv&gid=0";
 
 let DIRECTORY = SAMPLE_DIRECTORY;
+
+function stripEmailDomain(email) {
+  return (email || "").replace(/@innosim\.com\s*$/i, "").trim();
+}
 
 function parseCsv(text) {
   const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
@@ -193,6 +202,7 @@ function parseCsv(text) {
       deptEn: cells[2] || '',
       rank: cells[3] || '',
       rankEn: cells[4] || '',
+      email: stripEmailDomain(cells[5] || ''),
     };
   }).filter(r => r.name);
 }
@@ -264,6 +274,7 @@ const manualDeptInput = document.getElementById('manualDeptInput');
 const manualRankInput = document.getElementById('manualRankInput');
 
 let matched = null;
+let lastAutoFilledFor = null;
 
 function findMatch() {
   const n = nameInput.value.trim();
@@ -275,6 +286,10 @@ function findMatch() {
     nameHint.textContent = `✓ ${matched.dept} · ${matched.rank}`;
     nameHint.className = 'hint ok';
     manualFieldsBox.style.display = 'none';
+    if (lastAutoFilledFor !== matched.name && matched.email) {
+      emailInput.value = matched.email;
+      lastAutoFilledFor = matched.name;
+    }
   } else {
     nameHint.textContent = '';
     manualFieldsBox.style.display = 'block';
@@ -336,6 +351,10 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
 
   if (missing.length > 0) {
     showToast(`다음 항목을 입력해 주세요: ${missing.join(', ')}`);
+    return;
+  }
+  if (!document.getElementById('confirmCheck').checked) {
+    showToast('명함 정보를 확인했다는 체크박스를 눌러주세요.');
     return;
   }
   if (APPS_SCRIPT_URL.indexOf('PASTE_YOUR') === 0) {
