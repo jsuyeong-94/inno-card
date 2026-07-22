@@ -109,7 +109,7 @@
 
     <label class="checkbox-row" id="manualModeRow" style="margin-top:14px;">
       <input type="checkbox" id="manualModeCheck" />
-      명함 직접 만들기 (부서·직급을 자동입력 대신 직접 작성)
+      부서/직급 커스텀 수정하기
     </label>
 
     <div id="manualFieldsBox" style="display:none; margin-top:14px; padding-top:14px; border-top:1px dashed var(--border);">
@@ -133,6 +133,11 @@
       </div>
     </div>
   </div>
+
+  <p class="sub" style="margin-bottom:16px;">
+    ※ 위 이미지는 입력하신 내용을 확인하기 위한 미리보기입니다. 
+       실제 제작되는 명함은 기존 명함과 동일한 규격(사이즈·비율)에 맞춰 제작됩니다.
+  </p>
 
   <div class="preview-card">
     <div class="preview-title">앞면 (한글)</div>
@@ -367,7 +372,7 @@ document.getElementById('submitBtn').addEventListener('click', async () => {
   if (!englishName) missing.push('영문명');
   if (!mobile) missing.push('전화번호');
   if (!email) missing.push('이메일');
-  if (!dr.dept) missing.push('부서 (명단에 없으면 "명함 직접 만들기" 체크 후 입력)');
+  if (!dr.dept) missing.push('부서 (명단에 없으면 "부서/직급 커스텀 수정하기" 체크 후 입력)');
   if (!dr.rank) missing.push('직급');
   if (!dr.deptEn) missing.push('부서 영문');
   if (!dr.rankEn) missing.push('직급 영문');
