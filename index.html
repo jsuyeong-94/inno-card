@@ -205,11 +205,34 @@ function stripEmailDomain(email) {
   return (email || "").replace(/@innosim\.com\s*$/i, "").trim();
 }
 
+function parseCsvLine(line) {
+  const result = [];
+  let cur = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (inQuotes) {
+      if (c === '"') {
+        if (line[i + 1] === '"') { cur += '"'; i++; } // 이스케이프된 큰따옴표
+        else { inQuotes = false; }
+      } else {
+        cur += c;
+      }
+    } else {
+      if (c === '"') inQuotes = true;
+      else if (c === ',') { result.push(cur); cur = ''; }
+      else cur += c;
+    }
+  }
+  result.push(cur);
+  return result.map(c => c.trim());
+}
+
 function parseCsv(text) {
   const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
   const rows = lines.slice(1); // 첫 줄(헤더) 제외
   return rows.map(line => {
-    const cells = line.split(',').map(c => c.trim().replace(/^"|"$/g, ''));
+    const cells = parseCsvLine(line);
     return {
       name: cells[0] || '',
       dept: cells[1] || '',
